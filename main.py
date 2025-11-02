@@ -1,6 +1,7 @@
 import sys
-from PyQt6.QtWidgets import QApplication, QMainWindow, QMenuBar, QMenu, QMessageBox
-from PyQt6.QtGui import QAction, QIcon, QPixmap, QPainter, QColor, QKeySequence
+from PyQt6.QtWidgets import QApplication, QMainWindow, QMenuBar, QMenu, QMessageBox, QGraphicsView, QGraphicsScene, QToolBar
+from PyQt6.QtGui import QAction, QIcon, QPixmap, QPainter, QColor, QKeySequence, QPen, QBrush, QFont
+from PyQt6.QtCore import Qt, QPointF
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -9,9 +10,9 @@ class MainWindow(QMainWindow):
         self.setGeometry(100, 100, 800, 600)
         # Set dummy company logo
         pixmap = QPixmap(32, 32)
-        pixmap.fill(QColor("blue"))
+        pixmap.fill(QColor("black"))
         painter = QPainter(pixmap)
-        painter.setPen(QColor("white"))
+        painter.setPen(QColor("black"))
         painter.drawText(10, 20, "CNC")
         painter.end()
         self.setWindowIcon(QIcon(pixmap))
@@ -163,8 +164,99 @@ class MainWindow(QMainWindow):
         about_action.triggered.connect(self.show_about)
         help_menu.addAction(about_action)
 
+        # Create separate toolbars for each menu
+        # File toolbar
+        file_toolbar = self.addToolBar("File")
+        file_toolbar.addAction(new_action)
+        file_toolbar.addAction(open_action)
+        file_toolbar.addAction(save_action)
+        file_toolbar.addAction(save_as_action)
+        file_toolbar.addAction(export_dxf_action)
+        file_toolbar.addSeparator()
+        file_toolbar.addAction(exit_action)
+
+        # Edit toolbar
+        edit_toolbar = self.addToolBar("Edit")
+        edit_toolbar.addAction(copy_action)
+        edit_toolbar.addAction(paste_action)
+        edit_toolbar.addAction(undo_action)
+        edit_toolbar.addAction(redo_action)
+        edit_toolbar.addAction(delete_action)
+        edit_toolbar.addAction(select_all_action)
+
+        # Draw toolbar
+        draw_toolbar = self.addToolBar("Draw")
+        draw_toolbar.addAction(line_action)
+        draw_toolbar.addAction(arc_action)
+        draw_toolbar.addAction(spline_action)
+        draw_toolbar.addAction(circle_action)
+        draw_toolbar.addAction(rectangle_action)
+        draw_toolbar.addAction(polyline_action)
+
+        # Edit Curves toolbar
+        edit_curves_toolbar = self.addToolBar("Edit Curves")
+        edit_curves_toolbar.addAction(trim_action)
+        edit_curves_toolbar.addAction(join_action)
+
+        # Transform toolbar
+        transform_toolbar = self.addToolBar("Transform")
+        transform_toolbar.addAction(scale_action)
+        transform_toolbar.addAction(move_action)
+        transform_toolbar.addAction(rotate_action)
+        transform_toolbar.addAction(mirror_action)
+        transform_toolbar.addAction(move_to_ucs_origin_action)
+
+        # Set up the graphics view
+        self.scene = QGraphicsScene(self)
+        self.view = GraphicsView(self.scene)
+        self.setCentralWidget(self.view)
+
+        # Draw the 2D plane
+        self.draw_plane()
+
+    def draw_plane(self):
+        # Clear the scene
+        self.scene.clear()
+
+        # Set scene rect to a large area, say -1000 to 1000 mm
+        self.scene.setSceneRect(-10000, -10000, 20000, 20000)
+
+        # Pen for axes
+        axis_pen = QPen(QColor("gray"),1)
+        
+
+        # Draw main axes
+        self.scene.addLine(-1000, 0, 1000, 0, axis_pen)  # X axis
+        self.scene.addLine(0, -1000, 0, 1000, axis_pen)  # Y axis
+
+
+
+
+
     def show_about(self):
         QMessageBox.about(self, "About CNC Toolpath Designer", "Company: CNC CAD\nVersion: 1.0\nThis is a dummy description for the CNC Toolpath Designer application.")
+
+
+class GraphicsView(QGraphicsView):
+    def __init__(self, scene):
+        super().__init__(scene)
+        self.setRenderHint(QPainter.RenderHint.Antialiasing)
+        self.setDragMode(QGraphicsView.DragMode.ScrollHandDrag)
+        self.setTransformationAnchor(QGraphicsView.ViewportAnchor.AnchorUnderMouse)
+        self.setResizeAnchor(QGraphicsView.ViewportAnchor.AnchorUnderMouse)
+        self.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+
+    def wheelEvent(self, event):
+        zoom_in_factor = 1.15
+        zoom_out_factor = 1 / zoom_in_factor
+
+        if event.angleDelta().y() > 0:
+            zoom_factor = zoom_in_factor
+        else:
+            zoom_factor = zoom_out_factor
+
+        self.scale(zoom_factor, zoom_factor)
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
