@@ -113,7 +113,7 @@ class MainWindow(QMainWindow):
         draw_menu.addAction(rectangle_action)
 
         polyline_action = QAction("Polyline", self)
-        polyline_action.setShortcut(QKeySequence("Ctrl+Y"))
+        polyline_action.setShortcut(QKeySequence("Ctrl+Shift+Y"))
         polyline_action.triggered.connect(lambda: print("Polyline action triggered"))
         draw_menu.addAction(polyline_action)
 
